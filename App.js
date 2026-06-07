@@ -23,23 +23,29 @@ function TelaCalendario() {
   const [grupoSelecionado, setGrupoSelecionado] = useState('TODOS');
 
   useEffect(() => {
+    //RF-012 carrega os favoritos do usuario salvos no Supabase
     async function carregarFavoritos() {
       const { data, error } = await supabase.from('favoritos').select('jogo_id');
       if (error) { console.log(error); return; }
       setFavoritos(data.map(item => item.jogo_id));
     }
+
+    //RF-006 carrega jogos ordenados por data de forma crescente
     async function carregarJogos() {
       const { data, error } = await supabase
         .from('jogos_copa').select('*').order('data_brasilia', { ascending: true });
       if (error) { console.log('Erro ao carregar jogos:', error); }
       else { setJogos(data); }
     }
+
     carregarJogos();
     carregarFavoritos();
   }, []);
 
+  //RF-009 extrai grupos únicos dos jogos para montar os botões de filtro
   const grupos = ['TODOS', ...new Set(jogos.map(jogo => jogo.grupo))];
 
+  //RF-008 / RF-012 alterna favorito: remove do Supabase se já favoritado, insere se não
   const toggleFavorito = async (id) => {
     if (favoritos.includes(id)) {
       const { error } = await supabase.from('favoritos').delete().eq('jogo_id', id);
@@ -50,9 +56,11 @@ function TelaCalendario() {
     }
   };
 
+  //RF-009 filtra jogos pelo grupo selecionado
   const jogosFiltrados = grupoSelecionado === 'TODOS'
     ? jogos : jogos.filter(jogo => jogo.grupo === grupoSelecionado);
 
+  //RF-004 função de agrupamento separada em utilitário, ordena por horário (RF-006)
   const agruparPorData = (jogos) => jogos.reduce((acc, jogo) => {
     const data = formatarData(jogo.data_brasilia);
     if (!acc[data]) acc[data] = [];
@@ -83,6 +91,8 @@ function TelaCalendario() {
           </TouchableOpacity>
         </View>
         <Text style={styles.title}>CALENDÁRIO</Text>
+
+        {/*RF-009 botões de filtro por grupo gerados dinamicamente */}
         <View style={styles.filtrosContainer}>
           {grupos.map((grupo) => (
             <TouchableOpacity
@@ -96,6 +106,8 @@ function TelaCalendario() {
             </TouchableOpacity>
           ))}
         </View>
+
+        {/*RF-011 exibe card quando não há jogos; caso contrário exibe lista agrupada por data */}
         {jogos.length === 0 ? (
           <View style={styles.cardSemJogos}>
             <Text style={styles.textoSemJogos}>Nenhum jogo carregado</Text>
@@ -107,6 +119,7 @@ function TelaCalendario() {
             sections={jogosTratados}
             keyExtractor={(item) => item.id.toString()}
             renderItem={() => null}
+            //RF-003 DiaCard encapsula todos os jogos de um dia
             renderSectionHeader={({ section }) => (
               <DiaCard
                 data={section.title} jogos={section.data}
@@ -130,6 +143,7 @@ function TabIcon({ label, focused }) {
   );
 }
 
+//RF-015 / RF-016 / RF-017 navegação por abas para usuários autenticados
 function MainTabs() {
   return (
     <Tab.Navigator
@@ -157,6 +171,7 @@ function MainTabs() {
   );
 }
 
+//RF-013 / RF-014 navegação para usuários não autenticados
 function AuthNavigator() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
@@ -170,6 +185,7 @@ export default function App() {
   const [sessao, setSessao] = useState(undefined);
 
   useEffect(() => {
+    //RF-013 recupera sessão persistida e escuta mudanças de autenticação em tempo real
     supabase.auth.getSession().then(({ data: { session } }) => setSessao(session));
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSessao(session);
@@ -179,6 +195,7 @@ export default function App() {
 
   if (sessao === undefined) return <View style={{ flex: 1, backgroundColor: '#040b13' }} />;
 
+  //RF-013 redireciona para login se não autenticado, ou para o app principal se autenticado
   return (
     <NavigationContainer>
       {sessao ? (

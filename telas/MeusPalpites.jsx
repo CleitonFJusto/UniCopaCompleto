@@ -7,25 +7,30 @@ import { useFocusEffect } from '@react-navigation/native';
 import { supabase } from '../utils/supabase';
 import { formatarData } from '../utils/DateFormat';
 
+//RF-017 verifica se o jogo já iniciou com base em data e hora no horário de Brasília
 function jogoJaIniciou(dataJogo, horaJogo) {
   const agora = new Date();
   const inicio = new Date(`${dataJogo}T${horaJogo}-03:00`);
   return agora >= inicio;
 }
 
+//RF-017 opções de filtro: todos, pendentes (não confirmados) e confirmados
 const FILTROS = ['TODOS', 'PENDENTES', 'CONFIRMADOS'];
 
+//RF-017 tela dedicada para visualizar todos os palpites do usuário autenticado
 export default function MeusPalpites() {
   const [palpites, setPalpites] = useState([]);
   const [filtro, setFiltro] = useState('TODOS');
   const [carregando, setCarregando] = useState(true);
 
+  //RF-017 recarrega os palpites sempre que a tela recebe foco
   useFocusEffect(
     useCallback(() => {
       carregarPalpites();
     }, [])
   );
 
+  //RF-017 busca todos os palpites do usuário autenticado com join na tabela de jogos
   async function carregarPalpites() {
     setCarregando(true);
     const { data: { user } } = await supabase.auth.getUser();
@@ -47,6 +52,7 @@ export default function MeusPalpites() {
     if (!error && data) setPalpites(data);
   }
 
+  //RF-017 filtra palpites por status: todos / pendentes / confirmados
   const palpitesFiltrados = palpites.filter(p => {
     if (filtro === 'TODOS') return true;
     if (filtro === 'CONFIRMADOS') return p.confirmado;
@@ -54,6 +60,7 @@ export default function MeusPalpites() {
     return true;
   });
 
+  //RF-017 agrupa palpites por data do jogo para exibir em seções
   const agruparPorData = (lista) => {
     return lista.reduce((acc, p) => {
       const jogo = p.jogos_copa;
@@ -67,8 +74,7 @@ export default function MeusPalpites() {
 
   const agrupados = agruparPorData(palpitesFiltrados);
   const secoes = Object.keys(agrupados).map(data => ({
-    title: data,
-    data: agrupados[data]
+    title: data, data: agrupados[data]
   }));
 
   if (carregando) {
@@ -90,7 +96,7 @@ export default function MeusPalpites() {
         <Image style={styles.logo} source={require('../assets/unicopa.png')} />
         <Text style={styles.titulo}>MEUS PALPITES</Text>
 
-        {/* Filtros */}
+        {/*RF-017 botões de filtro por status do palpite */}
         <View style={styles.filtrosContainer}>
           {FILTROS.map(f => (
             <TouchableOpacity
@@ -98,13 +104,12 @@ export default function MeusPalpites() {
               style={[styles.botaoFiltro, filtro === f && styles.botaoFiltroAtivo]}
               onPress={() => setFiltro(f)}
             >
-              <Text style={[styles.textoFiltro, filtro === f && styles.textoFiltroAtivo]}>
-                {f}
-              </Text>
+              <Text style={[styles.textoFiltro, filtro === f && styles.textoFiltroAtivo]}>{f}</Text>
             </TouchableOpacity>
           ))}
         </View>
 
+        {/*RF-017 trata estado vazio com mensagem informativa */}
         {palpitesFiltrados.length === 0 ? (
           <View style={styles.vazioContainer}>
             <Text style={styles.vazioIcone}>🏆</Text>
@@ -126,6 +131,7 @@ export default function MeusPalpites() {
             renderItem={({ item: palpite }) => {
               const jogo = palpite.jogos_copa;
               if (!jogo) return null;
+              //RF-017 indica visualmente jogos já iniciados/finalizados
               const iniciou = jogoJaIniciou(jogo.data_brasilia, jogo.hora_brasilia);
 
               return (
@@ -151,18 +157,17 @@ export default function MeusPalpites() {
                     </View>
                   </View>
 
+                  {/*RF-017 exibe times, placar palpitado e horário do jogo */}
                   <View style={styles.cardTimes}>
                     <View style={styles.timeContainer}>
                       <Text style={styles.timeSigla}>{jogo.sigla_casa}</Text>
                       <Text style={styles.timeNome} numberOfLines={1}>{jogo.time_casa}</Text>
                     </View>
-
                     <View style={styles.placarContainer}>
                       <Text style={styles.placarGol}>{palpite.gols_casa}</Text>
                       <Text style={styles.placarSep}>×</Text>
                       <Text style={styles.placarGol}>{palpite.gols_fora}</Text>
                     </View>
-
                     <View style={[styles.timeContainer, { alignItems: 'flex-end' }]}>
                       <Text style={styles.timeSigla}>{jogo.sigla_fora}</Text>
                       <Text style={styles.timeNome} numberOfLines={1}>{jogo.time_fora}</Text>
@@ -185,65 +190,31 @@ const styles = StyleSheet.create({
   content: { flex: 1, alignItems: 'center', paddingTop: 20 },
   logo: { width: 200, height: 50, resizeMode: 'contain' },
   titulo: { marginTop: 10, fontSize: 28, fontWeight: '700', color: 'white', marginBottom: 16 },
-  filtrosContainer: {
-    flexDirection: 'row', marginBottom: 10,
-    paddingHorizontal: 10, gap: 8
-  },
-  botaoFiltro: {
-    backgroundColor: '#102030', paddingHorizontal: 14,
-    paddingVertical: 8, borderRadius: 20,
-    borderWidth: 1, borderColor: '#1e2d3d'
-  },
+  filtrosContainer: { flexDirection: 'row', marginBottom: 10, paddingHorizontal: 10, gap: 8 },
+  botaoFiltro: { backgroundColor: '#102030', paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, borderWidth: 1, borderColor: '#1e2d3d' },
   botaoFiltroAtivo: { backgroundColor: '#f2cc2f' },
   textoFiltro: { color: 'white', fontWeight: 'bold', fontSize: 12 },
   textoFiltroAtivo: { color: '#040b13' },
-  dataHeader: {
-    color: '#f2cc2f', fontSize: 16, fontWeight: 'bold',
-    alignSelf: 'flex-start', marginLeft: 20, marginTop: 16, marginBottom: 4
-  },
+  dataHeader: { color: '#f2cc2f', fontSize: 16, fontWeight: 'bold', alignSelf: 'flex-start', marginLeft: 20, marginTop: 16, marginBottom: 4 },
   vazioContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', gap: 12 },
   vazioIcone: { fontSize: 48 },
   vazioTexto: { color: '#7a9ab0', fontSize: 16, textAlign: 'center' },
-  card: {
-    width: 320, backgroundColor: '#0c1b2a',
-    borderRadius: 12, padding: 14, marginVertical: 4,
-    borderWidth: 1, borderColor: '#1e2d3d'
-  },
+  card: { width: 320, backgroundColor: '#0c1b2a', borderRadius: 12, padding: 14, marginVertical: 4, borderWidth: 1, borderColor: '#1e2d3d' },
   cardIniciado: { borderColor: '#1e2d3d', opacity: 0.85 },
-  cardHeader: {
-    flexDirection: 'row', justifyContent: 'space-between',
-    alignItems: 'center', marginBottom: 10
-  },
+  cardHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
   cardHora: { color: '#7a9ab0', fontSize: 12 },
   tagsContainer: { flexDirection: 'row', gap: 6 },
-  tagEncerrado: {
-    backgroundColor: '#2a0c0c', paddingHorizontal: 8,
-    paddingVertical: 2, borderRadius: 10
-  },
+  tagEncerrado: { backgroundColor: '#2a0c0c', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 10 },
   tagEncerradoTexto: { color: '#e74c3c', fontSize: 10, fontWeight: 'bold' },
-  tagConfirmado: {
-    backgroundColor: '#0c2a15', paddingHorizontal: 8,
-    paddingVertical: 2, borderRadius: 10
-  },
+  tagConfirmado: { backgroundColor: '#0c2a15', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 10 },
   tagConfirmadoTexto: { color: '#2ecc71', fontSize: 10, fontWeight: 'bold' },
-  tagPendente: {
-    backgroundColor: '#2a1f0c', paddingHorizontal: 8,
-    paddingVertical: 2, borderRadius: 10
-  },
+  tagPendente: { backgroundColor: '#2a1f0c', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 10 },
   tagPendenteTexto: { color: '#f2cc2f', fontSize: 10, fontWeight: 'bold' },
-  cardTimes: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between'
-  },
+  cardTimes: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   timeContainer: { flex: 1, alignItems: 'flex-start' },
   timeSigla: { color: 'white', fontWeight: 'bold', fontSize: 20 },
   timeNome: { color: '#7a9ab0', fontSize: 11, marginTop: 2 },
-  placarContainer: {
-    flexDirection: 'row', alignItems: 'center',
-    gap: 8, paddingHorizontal: 10
-  },
-  placarGol: {
-    color: '#f2cc2f', fontWeight: '800', fontSize: 28,
-    minWidth: 32, textAlign: 'center'
-  },
+  placarContainer: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 10 },
+  placarGol: { color: '#f2cc2f', fontWeight: '800', fontSize: 28, minWidth: 32, textAlign: 'center' },
   placarSep: { color: '#7a9ab0', fontSize: 20, fontWeight: 'bold' },
 });

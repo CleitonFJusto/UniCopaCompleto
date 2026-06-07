@@ -1,20 +1,12 @@
 import React, { useState } from 'react';
 import {
-  StyleSheet,
-  Text,
-  View,
-  TextInput,
-  TouchableOpacity,
-  Image,
-  ImageBackground,
-  ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  Alert
+  StyleSheet, Text, View, TextInput, TouchableOpacity,
+  Image, ImageBackground, ActivityIndicator,
+  KeyboardAvoidingView, Platform, ScrollView, Alert
 } from 'react-native';
 import { supabase } from '../utils/supabase';
 
+//RF-014 tela de registro com campos: Nome (opcional), E-mail, Senha e Confirmar Senha
 export default function Registro({ navigation }) {
   const [nome, setNome] = useState('');
   const [email, setEmail] = useState('');
@@ -24,46 +16,38 @@ export default function Registro({ navigation }) {
   const [erros, setErros] = useState({});
   const [sucesso, setSucesso] = useState(false);
 
+  //RF-014 valida senha mínima de 6 caracteres e se Senha === Confirmar Senha
   const validar = () => {
     const novosErros = {};
-
     if (!email.trim()) {
       novosErros.email = 'E-mail é obrigatório';
     } else if (!/\S+@\S+\.\S+/.test(email)) {
       novosErros.email = 'Formato de e-mail inválido';
     }
-
     if (!senha) {
       novosErros.senha = 'Senha é obrigatória';
     } else if (senha.length < 6) {
       novosErros.senha = 'A senha deve ter pelo menos 6 caracteres';
     }
-
     if (!confirmarSenha) {
       novosErros.confirmarSenha = 'Confirmação de senha é obrigatória';
     } else if (senha !== confirmarSenha) {
       novosErros.confirmarSenha = 'As senhas não coincidem';
     }
-
     setErros(novosErros);
     return Object.keys(novosErros).length === 0;
   };
 
+  //RF-014 integra cadastro com Supabase (sign up) e orienta o usuário após o registro
   const handleRegistro = async () => {
     if (!validar()) return;
-
     setCarregando(true);
-
     const { error } = await supabase.auth.signUp({
       email: email.trim(),
       password: senha,
-      options: {
-        data: { nome: nome.trim() || null },
-      },
+      options: { data: { nome: nome.trim() || null } },
     });
-
     setCarregando(false);
-
     if (error) {
       Alert.alert('Erro ao cadastrar', error.message);
     } else {
@@ -71,6 +55,7 @@ export default function Registro({ navigation }) {
     }
   };
 
+  //RF-014 tela de sucesso após cadastro, orientando o usuário a confirmar o e-mail
   if (sucesso) {
     return (
       <ImageBackground
@@ -80,17 +65,13 @@ export default function Registro({ navigation }) {
       >
         <View style={styles.inner}>
           <Image style={styles.logo} source={require('../assets/unicopa.png')} />
-
           <View style={styles.form}>
             <Text style={styles.iconeSuccesso}>✓</Text>
             <Text style={styles.tituloSucesso}>Cadastro realizado!</Text>
             <Text style={styles.textoSucesso}>
               Verifique seu e-mail para confirmar o cadastro antes de entrar.
             </Text>
-            <TouchableOpacity
-              style={styles.botao}
-              onPress={() => navigation.navigate('Login')}
-            >
+            <TouchableOpacity style={styles.botao} onPress={() => navigation.navigate('Login')}>
               <Text style={styles.textoBotao}>IR PARA LOGIN</Text>
             </TouchableOpacity>
           </View>
@@ -106,20 +87,12 @@ export default function Registro({ navigation }) {
       resizeMode="cover"
       imageStyle={{ width: '100%', height: '100%' }}
     >
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={{ flex: 1 }}
-      >
-        <ScrollView
-          contentContainerStyle={styles.inner}
-          keyboardShouldPersistTaps="handled"
-        >
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
+        <ScrollView contentContainerStyle={styles.inner} keyboardShouldPersistTaps="handled">
           <Image style={styles.logo} source={require('../assets/unicopa.png')} />
-
           <Text style={styles.titulo}>REGISTRAR-SE</Text>
 
           <View style={styles.form}>
-
             <Text style={styles.label}>Nome (opcional)</Text>
             <TextInput
               style={styles.input}
@@ -175,16 +148,13 @@ export default function Registro({ navigation }) {
               }
             </TouchableOpacity>
 
-            <TouchableOpacity
-              style={styles.botaoSecundario}
-              onPress={() => navigation.navigate('Login')}
-            >
+            {/*RF-013 link para voltar à tela de login */}
+            <TouchableOpacity style={styles.botaoSecundario} onPress={() => navigation.navigate('Login')}>
               <Text style={styles.textoBotaoSecundario}>
                 Já tem conta?{' '}
                 <Text style={styles.textoLink}>Entrar</Text>
               </Text>
             </TouchableOpacity>
-
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -193,110 +163,26 @@ export default function Registro({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-container: {
-  flex: 1,
-  width: '100%',
-  height: '100%',
-  backgroundColor: '#040b13',
-},
-  inner: {
-    flexGrow: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 30,
-    paddingVertical: 40,
-  },
-  logo: {
-    width: 200,
-    height: 50,
-    resizeMode: 'contain',
-    marginBottom: 10,
-  },
-  titulo: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: 'white',
-    marginBottom: 30,
-    letterSpacing: 2,
-  },
-  form: {
-    width: '100%',
-    backgroundColor: '#0c1b2a',
-    borderRadius: 16,
-    padding: 24,
-  },
-  label: {
-    color: '#f2cc2f',
-    fontWeight: 'bold',
-    marginBottom: 6,
-    fontSize: 13,
-    letterSpacing: 1,
-  },
+  container: { flex: 1, width: '100%', height: '100%', backgroundColor: '#040b13' },
+  inner: { flexGrow: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 30, paddingVertical: 40 },
+  logo: { width: 200, height: 50, resizeMode: 'contain', marginBottom: 10 },
+  titulo: { fontSize: 28, fontWeight: '700', color: 'white', marginBottom: 30, letterSpacing: 2 },
+  form: { width: '100%', backgroundColor: '#0c1b2a', borderRadius: 16, padding: 24 },
+  label: { color: '#f2cc2f', fontWeight: 'bold', marginBottom: 6, fontSize: 13, letterSpacing: 1 },
   input: {
-    backgroundColor: '#102030',
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#1e2d3d',
-    color: 'white',
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    marginBottom: 6,
-    fontSize: 15,
+    backgroundColor: '#102030', borderRadius: 10, borderWidth: 1,
+    borderColor: '#1e2d3d', color: 'white', paddingHorizontal: 14,
+    paddingVertical: 12, marginBottom: 6, fontSize: 15,
   },
-  inputErro: {
-    borderColor: '#e74c3c',
-  },
-  textoErro: {
-    color: '#e74c3c',
-    fontSize: 12,
-    marginBottom: 10,
-  },
-  botao: {
-    backgroundColor: '#f2cc2f',
-    borderRadius: 10,
-    paddingVertical: 14,
-    alignItems: 'center',
-    marginTop: 16,
-  },
-  botaoDesativado: {
-    opacity: 0.6,
-  },
-  textoBotao: {
-    color: '#040b13',
-    fontWeight: '800',
-    fontSize: 15,
-    letterSpacing: 1,
-  },
-  botaoSecundario: {
-    marginTop: 16,
-    alignItems: 'center',
-  },
-  textoBotaoSecundario: {
-    color: '#7a9ab0',
-    fontSize: 14,
-  },
-  textoLink: {
-    color: '#f2cc2f',
-    fontWeight: 'bold',
-  },
-  iconeSuccesso: {
-    fontSize: 48,
-    color: '#f2cc2f',
-    textAlign: 'center',
-    marginBottom: 12,
-  },
-  tituloSucesso: {
-    fontSize: 22,
-    fontWeight: '700',
-    color: 'white',
-    textAlign: 'center',
-    marginBottom: 10,
-  },
-  textoSucesso: {
-    color: '#7a9ab0',
-    textAlign: 'center',
-    fontSize: 14,
-    lineHeight: 22,
-    marginBottom: 20,
-  },
+  inputErro: { borderColor: '#e74c3c' },
+  textoErro: { color: '#e74c3c', fontSize: 12, marginBottom: 10 },
+  botao: { backgroundColor: '#f2cc2f', borderRadius: 10, paddingVertical: 14, alignItems: 'center', marginTop: 16 },
+  botaoDesativado: { opacity: 0.6 },
+  textoBotao: { color: '#040b13', fontWeight: '800', fontSize: 15, letterSpacing: 1 },
+  botaoSecundario: { marginTop: 16, alignItems: 'center' },
+  textoBotaoSecundario: { color: '#7a9ab0', fontSize: 14 },
+  textoLink: { color: '#f2cc2f', fontWeight: 'bold' },
+  iconeSuccesso: { fontSize: 48, color: '#f2cc2f', textAlign: 'center', marginBottom: 12 },
+  tituloSucesso: { fontSize: 22, fontWeight: '700', color: 'white', textAlign: 'center', marginBottom: 10 },
+  textoSucesso: { color: '#7a9ab0', textAlign: 'center', fontSize: 14, lineHeight: 22, marginBottom: 20 },
 });

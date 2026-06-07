@@ -1,3 +1,5 @@
+//RF-001 mapeamento das logos das seleções por sigla
+//utilizado no GameCard para exibir a bandeira de cada time
 export const TEAM_FLAGS = {
     ALG: require("../assets/jogos/Algeria.png"),
     ARG: require("../assets/jogos/argentina.png"),
