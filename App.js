@@ -19,6 +19,7 @@ export default function App() {
   const [favoritos, setFavoritos] = useState([]);
   const [grupoSelecionado, setGrupoSelecionado] = useState('TODOS');
 
+<<<<<<< HEAD
 useEffect(() => {
 
   //RF 12 CARREGAR FAVORITOS DO USUARIO 
@@ -56,6 +57,31 @@ useEffect(() => {
   carregarFavoritos();
 
 }, []);
+=======
+  useEffect(() => {
+
+    async function carregarJogos() {
+
+      const { data, error } = await supabase
+        .from('jogos_copa')
+        .select('*')
+        .order('data_brasilia', { ascending: true });
+
+
+      if (error) {
+        console.log('Erro ao carregar jogos:', error);
+      } else {
+        setJogos(data);
+      }
+
+    }
+
+    carregarJogos();
+
+    
+
+  }, []);
+>>>>>>> 915d4b4b2630d363ffadd2ae92bade891c9efacb
 
 
   const grupos = [
@@ -63,6 +89,7 @@ useEffect(() => {
     ...new Set(jogos.map(jogo => jogo.grupo))
   ];
 
+<<<<<<< HEAD
 const toggleFavorito = async (id) => {
   
   if (favoritos.includes(id)) {
@@ -96,6 +123,18 @@ const toggleFavorito = async (id) => {
   }
 
 };
+=======
+  const toggleFavorito = (id) => {
+
+    if (favoritos.includes(id)) {
+      setFavoritos(favoritos.filter(item => item !== id));
+    } else {
+      setFavoritos([...favoritos, id]);
+    }
+
+  };
+
+>>>>>>> 915d4b4b2630d363ffadd2ae92bade891c9efacb
   const jogosFiltrados =
     grupoSelecionado === 'TODOS'
       ? jogos
@@ -171,6 +210,7 @@ const toggleFavorito = async (id) => {
           ))}
 
         </View>
+<<<<<<< HEAD
 {/* RF 11 -Exibe mensagem se não houver jogos, caso contrário exibe a lista de jogos agrupados por data */}
 {jogos.length === 0 ? (
         <View style={styles.cardSemJogos}>
@@ -179,6 +219,9 @@ const toggleFavorito = async (id) => {
           </Text>
         </View>
       ) : (
+=======
+
+>>>>>>> 915d4b4b2630d363ffadd2ae92bade891c9efacb
         <SectionList
           style={{ width: '100%' }}
           contentContainerStyle={{
@@ -198,11 +241,19 @@ const toggleFavorito = async (id) => {
           )}
           showsVerticalScrollIndicator={false}
         />
+<<<<<<< HEAD
       )}
 
     </View>
   </ImageBackground>
 );
+=======
+
+      </View>
+
+    </ImageBackground>
+  );
+>>>>>>> 915d4b4b2630d363ffadd2ae92bade891c9efacb
 }
 
 const styles = StyleSheet.create({
