@@ -25,10 +25,14 @@ function TelaCalendario() {
   useEffect(() => {
     //RF-012 carrega os favoritos do usuario salvos no Supabase
     async function carregarFavoritos() {
-      const { data, error } = await supabase.from('favoritos').select('jogo_id');
-      if (error) { console.log(error); return; }
-      setFavoritos(data.map(item => item.jogo_id));
-    }
+  const { data: { user } } = await supabase.auth.getUser();
+  const { data, error } = await supabase
+    .from('favoritos')
+    .select('jogo_id')
+    .eq('user_id', user.id);
+  if (error) { console.log(error); return; }
+  setFavoritos(data.map(item => item.jogo_id));
+}
 
     //RF-006 carrega jogos ordenados por data de forma crescente
     async function carregarJogos() {
@@ -47,14 +51,22 @@ function TelaCalendario() {
 
   //RF-008 / RF-012 alterna favorito: remove do Supabase se já favoritado, insere se não
   const toggleFavorito = async (id) => {
-    if (favoritos.includes(id)) {
-      const { error } = await supabase.from('favoritos').delete().eq('jogo_id', id);
-      if (!error) setFavoritos(favoritos.filter(item => item !== id));
-    } else {
-      const { error } = await supabase.from('favoritos').insert([{ jogo_id: id }]);
-      if (!error) setFavoritos([...favoritos, id]);
-    }
-  };
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  if (favoritos.includes(id)) {
+    const { error } = await supabase
+      .from('favoritos')
+      .delete()
+      .eq('jogo_id', id)
+      .eq('user_id', user.id);
+    if (!error) setFavoritos(favoritos.filter(item => item !== id));
+  } else {
+    const { error } = await supabase
+      .from('favoritos')
+      .insert([{ jogo_id: id, user_id: user.id }]);
+    if (!error) setFavoritos([...favoritos, id]);
+  }
+};
 
   //RF-009 filtra jogos pelo grupo selecionado
   const jogosFiltrados = grupoSelecionado === 'TODOS'
